@@ -25,20 +25,7 @@
       ]
     },
     "plugins": [
-      "expo-dev-client",
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "compileSdkVersion": 35,
-            "targetSdkVersion": 35,
-            "buildToolsVersion": "35.0.0",
-            "extraGradleProperties": {
-              "android.suppressUnsupportedCompileSdk": "35"
-            }
-          }
-        }
-      ]
+      "expo-dev-client"
     ],
     "extra": {
       "eas": {
