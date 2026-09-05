@@ -1,32 +1,41 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, ScrollView} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
 import {colors, spacing, radius, typography} from '../utils/theme';
 
 /**
- * Shown when we don't yet hold a folder grant. Explains the flow, then opens
- * the system folder picker via onGrant.
+ * Shown when we don't yet hold a folder grant.
+ * Tapping the button opens the system folder picker via onGrant.
+ * We guide the user with a single sentence so it feels like a normal
+ * permission dialog rather than a tutorial.
  */
 export default function PermissionGate({onGrant, checking}) {
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      {/* Icon */}
       <View style={styles.iconCircle}>
-        <Text style={styles.iconText}>📁</Text>
+        <Text style={styles.iconText}>📲</Text>
       </View>
 
-      <Text style={styles.title}>Allow access to statuses</Text>
+      <Text style={styles.title}>Access WhatsApp Statuses</Text>
 
       <Text style={styles.body}>
-        To show statuses, this app needs one-time access to WhatsApp's{' '}
-        <Text style={styles.bold}>.Statuses</Text> folder.
+        Tap <Text style={styles.bold}>Allow Access</Text> below, then select the{' '}
+        <Text style={styles.bold}>.Statuses</Text> folder and tap{' '}
+        <Text style={styles.bold}>"Use this folder"</Text>.
       </Text>
 
-      <View style={styles.steps}>
-        <Step n="1" text="Open WhatsApp and view a few statuses first." />
-        <Step n="2" text="Tap the button below to open the folder picker." />
-        <Step
-          n="3"
-          text="Navigate to Android → media → com.whatsapp → WhatsApp → Media → .Statuses, then tap “Use this folder”."
-        />
+      {/* Inline path hint */}
+      <View style={styles.pathHint}>
+        <Text style={styles.pathText}>
+          📂 Android → media → com.whatsapp → WhatsApp → Media →{' '}
+          <Text style={styles.pathHighlight}>.Statuses</Text>
+        </Text>
       </View>
 
       <TouchableOpacity
@@ -35,26 +44,14 @@ export default function PermissionGate({onGrant, checking}) {
         disabled={checking}
         activeOpacity={0.85}>
         <Text style={styles.buttonText}>
-          {checking ? 'Checking…' : 'Grant folder access'}
+          {checking ? 'Checking…' : '🔓 Allow Access'}
         </Text>
       </TouchableOpacity>
 
       <Text style={styles.note}>
-        Your files never leave your phone. Statuses disappear after 24 hours —
-        save the ones you want to keep.
+        Done once — we remember your choice. Your files never leave your phone.
       </Text>
     </ScrollView>
-  );
-}
-
-function Step({n, text}) {
-  return (
-    <View style={styles.step}>
-      <View style={styles.stepNum}>
-        <Text style={styles.stepNumText}>{n}</Text>
-      </View>
-      <Text style={styles.stepText}>{text}</Text>
-    </View>
   );
 }
 
@@ -67,43 +64,44 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   iconCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
-    elevation: 2,
+    elevation: 3,
   },
-  iconText: {fontSize: 40},
-  title: {...typography.title, marginBottom: spacing.sm, textAlign: 'center'},
+  iconText: {fontSize: 44},
+  title: {
+    ...typography.title,
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
   body: {
     ...typography.body,
     textAlign: 'center',
     marginBottom: spacing.lg,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   bold: {fontWeight: '700'},
-  steps: {
+  pathHint: {
     alignSelf: 'stretch',
     backgroundColor: colors.surface,
     borderRadius: radius.md,
-    padding: spacing.lg,
+    padding: spacing.md,
     marginBottom: spacing.xl,
   },
-  step: {flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.md},
-  stepNum: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
+  pathText: {
+    ...typography.muted,
+    lineHeight: 20,
+    textAlign: 'center',
   },
-  stepNumText: {color: colors.white, fontWeight: '700', fontSize: 13},
-  stepText: {flex: 1, ...typography.body, lineHeight: 20},
+  pathHighlight: {
+    color: colors.accent,
+    fontWeight: '700',
+  },
   button: {
     alignSelf: 'stretch',
     backgroundColor: colors.accent,
@@ -114,5 +112,9 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {opacity: 0.6},
   buttonText: {color: colors.white, fontWeight: '700', fontSize: 16},
-  note: {...typography.muted, textAlign: 'center', lineHeight: 18},
+  note: {
+    ...typography.muted,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
 });

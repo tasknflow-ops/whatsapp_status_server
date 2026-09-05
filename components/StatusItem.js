@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Image,
@@ -10,33 +10,81 @@ import {
 } from 'react-native';
 import {colors, spacing, radius} from '../utils/theme';
 import {MEDIA_TYPE} from '../utils/constants';
+import {getCachedFileUri} from '../native/storage';
 
 const GAP = spacing.sm;
 const COLS = 2;
 const size = (Dimensions.get('window').width - GAP * (COLS + 1)) / COLS;
 
 /**
- * One status thumbnail. Tapping the image opens the preview (onPress);
- * tapping the save pill downloads it (onSave). `saving` shows a spinner.
+ * One status thumbnail card.
  *
- * For videos we still use the file URI as the Image source — many SAF
- * content URIs return a still frame; if a thumbnail doesn't render we show
- * the video badge over a dark placeholder.
+ * - Images: reads the file from SAF into the local cache (once) then renders
+ *   a normal <Image> with the file:// URI. Shows a spinner while loading.
+ * - Videos: shows a dark placeholder with a ▶ play badge (frame extraction
+ *   is not supported without native FFmpeg — video previews open on tap).
+ *
+ * Tapping the thumbnail opens fullscreen preview (onPress).
+ * Tapping "Save" downloads to gallery (onSave).
  */
 export default function StatusItem({item, onPress, onSave, saving}) {
   const isVideo = item.mediaType === MEDIA_TYPE.VIDEO;
 
+  // file:// URI resolved from SAF content:// URI (images only)
+  const [thumbUri, setThumbUri] = useState(null);
+  const [thumbLoading, setThumbLoading] = useState(!isVideo);
+
+  useEffect(() => {
+    if (isVideo) return; // Videos use a static placeholder
+    let cancelled = false;
+
+    getCachedFileUri(item.uri, item.name).then(uri => {
+      if (!cancelled) {
+        setThumbUri(uri);
+        setThumbLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [item.uri, item.name, isVideo]);
+
   return (
     <View style={styles.cell}>
-      <TouchableOpacity activeOpacity={0.9} onPress={() => onPress(item)} style={styles.thumbWrap}>
-        <Image source={{uri: item.uri}} style={styles.thumb} resizeMode="cover" />
+      {/* Thumbnail / placeholder */}
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => onPress(item)}
+        style={styles.thumbWrap}>
         {isVideo ? (
-          <View style={styles.playBadge}>
-            <Text style={styles.playIcon}>▶</Text>
+          /* Video: dark tile + centred play icon */
+          <View style={styles.videoPlaceholder}>
+            <View style={styles.playBadge}>
+              <Text style={styles.playIcon}>▶</Text>
+            </View>
           </View>
-        ) : null}
+        ) : thumbLoading ? (
+          /* Image loading */
+          <View style={styles.loadingBox}>
+            <ActivityIndicator color={colors.accent} />
+          </View>
+        ) : thumbUri ? (
+          /* Image ready */
+          <Image
+            source={{uri: thumbUri}}
+            style={styles.thumb}
+            resizeMode="cover"
+          />
+        ) : (
+          /* Fallback if caching failed */
+          <View style={styles.loadingBox}>
+            <Text style={styles.errorIcon}>🖼️</Text>
+          </View>
+        )}
       </TouchableOpacity>
 
+      {/* Save button */}
       <TouchableOpacity
         style={styles.saveBtn}
         onPress={() => onSave(item)}
@@ -59,23 +107,33 @@ const styles = StyleSheet.create({
     height: size,
     borderRadius: radius.md,
     overflow: 'hidden',
-    backgroundColor: '#222',
+    backgroundColor: '#1a1a1a',
   },
   thumb: {width: '100%', height: '100%'},
-  playBadge: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    marginTop: -20,
-    marginLeft: -20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.overlay,
+  loadingBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1a1a1a',
+  },
+  errorIcon: {fontSize: 28},
+  videoPlaceholder: {
+    flex: 1,
+    backgroundColor: '#111',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  playIcon: {color: colors.white, fontSize: 16, marginLeft: 2},
+  playBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.20)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.5)',
+  },
+  playIcon: {color: colors.white, fontSize: 18, marginLeft: 3},
   saveBtn: {
     marginTop: spacing.xs,
     backgroundColor: colors.accent,
