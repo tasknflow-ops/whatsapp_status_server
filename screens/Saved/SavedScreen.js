@@ -1,22 +1,32 @@
 import React, {useCallback, useState} from 'react';
-import {View, StyleSheet, FlatList, Image, Text, Dimensions} from 'react-native';
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  Image,
+  Text,
+  TouchableOpacity,
+  Dimensions,
+} from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import EmptyState from '../../components/EmptyState';
 import {colors, spacing, radius} from '../../utils/theme';
-import {SAVED_FOLDER_NAME} from '../../utils/constants';
+import {SAVED_FOLDER_NAME, MEDIA_TYPE} from '../../utils/constants';
 
 const GAP = spacing.sm;
 const size = (Dimensions.get('window').width - GAP * 3) / 2;
 
 /**
- * Lists media already saved by this app. Reads the CameraRoll album named
- * SAVED_FOLDER_NAME. Refreshes each time the tab gains focus.
+ * Lists media already saved by this app.
+ * Reads the CameraRoll album named SAVED_FOLDER_NAME.
+ * Refreshes each time the tab gains focus.
+ * Tapping any item opens fullscreen preview via the shared PreviewScreen.
  *
- * NOTE: CameraRoll.getPhotos options/shape should be re-checked against the
- * installed @react-native-camera-roll/camera-roll version.
+ * CameraRoll URIs (content://media/... or file://) are readable directly by
+ * <Image> and react-native-video without SAF, so PreviewScreen uses them as-is.
  */
-export default function SavedScreen() {
+export default function SavedScreen({navigation}) {
   const [items, setItems] = useState([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -28,12 +38,21 @@ export default function SavedScreen() {
         groupTypes: 'Album',
         groupName: SAVED_FOLDER_NAME,
       });
-      const mapped = res.edges.map(e => ({
-        uri: e.node.image.uri,
-        type: e.node.type,
-      }));
+      const mapped = res.edges.map(e => {
+        const isVideo = e.node.type && e.node.type.startsWith('video');
+        // Derive a filename from the URI for display / cache keying
+        const uri = e.node.image.uri;
+        const name = uri.split('/').pop() || 'status_file';
+        return {
+          uri,
+          name,
+          mediaType: isVideo ? MEDIA_TYPE.VIDEO : MEDIA_TYPE.IMAGE,
+          // Flag so PreviewScreen knows this is a gallery URI, not SAF
+          isGalleryUri: true,
+        };
+      });
       setItems(mapped);
-    } catch (e) {
+    } catch (_e) {
       // Album may not exist yet (nothing saved) — treat as empty.
       setItems([]);
     } finally {
@@ -45,6 +64,13 @@ export default function SavedScreen() {
     useCallback(() => {
       load();
     }, [load]),
+  );
+
+  const openPreview = useCallback(
+    item => {
+      navigation.navigate('Preview', {item});
+    },
+    [navigation],
   );
 
   if (loaded && items.length === 0) {
@@ -68,16 +94,27 @@ export default function SavedScreen() {
         numColumns={2}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.content}
-        renderItem={({item}) => (
-          <View style={styles.cell}>
-            <Image source={{uri: item.uri}} style={styles.thumb} resizeMode="cover" />
-            {item.type && item.type.startsWith('video') ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>▶</Text>
-              </View>
-            ) : null}
-          </View>
-        )}
+        renderItem={({item}) => {
+          const isVideo = item.mediaType === MEDIA_TYPE.VIDEO;
+          return (
+            <TouchableOpacity
+              style={styles.cell}
+              activeOpacity={0.85}
+              onPress={() => openPreview(item)}>
+              {/* CameraRoll URIs are directly usable in <Image> */}
+              <Image
+                source={{uri: item.uri}}
+                style={styles.thumb}
+                resizeMode="cover"
+              />
+              {isVideo && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>▶</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        }}
       />
     </View>
   );
@@ -98,16 +135,18 @@ const styles = StyleSheet.create({
   thumb: {width: '100%', height: '100%'},
   badge: {
     position: 'absolute',
-    top: '50%',
-    left: '50%',
-    marginTop: -18,
-    marginLeft: -18,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.overlay,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeText: {color: colors.white, fontSize: 14},
+  badgeText: {
+    color: colors.white,
+    fontSize: 28,
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: {width: 0, height: 1},
+    textShadowRadius: 4,
+  },
 });

@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Dimensions,
 } from 'react-native';
+import Video from 'react-native-video';
 import {colors, spacing, radius} from '../utils/theme';
 import {MEDIA_TYPE} from '../utils/constants';
 import {getCachedFileUri} from '../native/storage';
@@ -19,10 +20,9 @@ const size = (Dimensions.get('window').width - GAP * (COLS + 1)) / COLS;
 /**
  * One status thumbnail card.
  *
- * - Images: reads the file from SAF into the local cache (once) then renders
- *   a normal <Image> with the file:// URI. Shows a spinner while loading.
- * - Videos: shows a dark placeholder with a ▶ play badge (frame extraction
- *   is not supported without native FFmpeg — video previews open on tap).
+ * - Images: resolved to file:// via getCachedFileUri, rendered with <Image>.
+ * - Videos: resolved to file:// via getCachedFileUri, rendered with a paused
+ *   <Video> to show the first frame as a thumbnail.
  *
  * Tapping the thumbnail opens fullscreen preview (onPress).
  * Tapping "Save" downloads to gallery (onSave).
@@ -30,61 +30,64 @@ const size = (Dimensions.get('window').width - GAP * (COLS + 1)) / COLS;
 export default function StatusItem({item, onPress, onSave, saving}) {
   const isVideo = item.mediaType === MEDIA_TYPE.VIDEO;
 
-  // file:// URI resolved from SAF content:// URI (images only)
-  const [thumbUri, setThumbUri] = useState(null);
-  const [thumbLoading, setThumbLoading] = useState(!isVideo);
+  // Cached file:// URI for both images and videos
+  const [fileUri, setFileUri] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isVideo) return; // Videos use a static placeholder
     let cancelled = false;
-
     getCachedFileUri(item.uri, item.name).then(uri => {
       if (!cancelled) {
-        setThumbUri(uri);
-        setThumbLoading(false);
+        setFileUri(uri);
+        setLoading(false);
       }
     });
-
     return () => {
       cancelled = true;
     };
-  }, [item.uri, item.name, isVideo]);
+  }, [item.uri, item.name]);
 
   return (
     <View style={styles.cell}>
-      {/* Thumbnail / placeholder */}
+      {/* ── Thumbnail ── */}
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={() => onPress(item)}
         style={styles.thumbWrap}>
-        {isVideo ? (
-          /* Video: dark tile + centred play icon */
-          <View style={styles.videoPlaceholder}>
+        {loading ? (
+          <View style={styles.loadingBox}>
+            <ActivityIndicator color={colors.accent} />
+          </View>
+        ) : !fileUri ? (
+          <View style={styles.loadingBox}>
+            <Text style={styles.errorIcon}>{isVideo ? '🎬' : '🖼️'}</Text>
+          </View>
+        ) : isVideo ? (
+          /* Paused video shows first frame as thumbnail */
+          <View style={styles.thumbWrap}>
+            <Video
+              source={{uri: fileUri}}
+              style={styles.thumb}
+              paused
+              muted
+              resizeMode="cover"
+              playInBackground={false}
+              disableFocus
+            />
             <View style={styles.playBadge}>
               <Text style={styles.playIcon}>▶</Text>
             </View>
           </View>
-        ) : thumbLoading ? (
-          /* Image loading */
-          <View style={styles.loadingBox}>
-            <ActivityIndicator color={colors.accent} />
-          </View>
-        ) : thumbUri ? (
-          /* Image ready */
+        ) : (
           <Image
-            source={{uri: thumbUri}}
+            source={{uri: fileUri}}
             style={styles.thumb}
             resizeMode="cover"
           />
-        ) : (
-          /* Fallback if caching failed */
-          <View style={styles.loadingBox}>
-            <Text style={styles.errorIcon}>🖼️</Text>
-          </View>
         )}
       </TouchableOpacity>
 
-      {/* Save button */}
+      {/* ── Save button ── */}
       <TouchableOpacity
         style={styles.saveBtn}
         onPress={() => onSave(item)}
@@ -111,29 +114,29 @@ const styles = StyleSheet.create({
   },
   thumb: {width: '100%', height: '100%'},
   loadingBox: {
-    flex: 1,
+    width: size,
+    height: size,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#1a1a1a',
   },
   errorIcon: {fontSize: 28},
-  videoPlaceholder: {
-    flex: 1,
-    backgroundColor: '#111',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   playBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.20)',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.5)',
   },
-  playIcon: {color: colors.white, fontSize: 18, marginLeft: 3},
+  playIcon: {
+    fontSize: 28,
+    color: colors.white,
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: {width: 0, height: 1},
+    textShadowRadius: 4,
+  },
   saveBtn: {
     marginTop: spacing.xs,
     backgroundColor: colors.accent,
