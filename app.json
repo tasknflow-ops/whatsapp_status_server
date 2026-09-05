@@ -10,7 +10,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#075E54"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
       "package": "com.jeemil.statussaver",
       "versionCode": 1,
@@ -24,6 +26,12 @@
     },
     "plugins": [
       "expo-dev-client"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "40bcd608-9c69-4ffb-a345-14caf62a1b6b"
+      }
+    },
+    "owner": "jimil_11"
   }
 }
