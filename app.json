@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Status Saver",
+    "slug": "whatsapp-status-saver",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#075E54"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "android": {
+      "package": "com.jeemil.statussaver",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO"
+      ],
+      "blockedPermissions": [
+        "android.permission.MANAGE_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": [
+      "expo-dev-client"
+    ]
+  }
+}
