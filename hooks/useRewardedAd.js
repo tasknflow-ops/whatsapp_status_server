@@ -35,6 +35,15 @@ export function useRewardedAd() {
     }
   }, [isEarnedReward]);
 
+  // If an error happens while a callback was pending, run it so user isn't stuck
+  useEffect(() => {
+    if (error && pendingCbRef.current) {
+      const cb = pendingCbRef.current;
+      pendingCbRef.current = null;
+      cb();
+    }
+  }, [error]);
+
   // When ad closes, ensure callback ran (even if user skipped) and preload next ad
   useEffect(() => {
     if (isClosed) {
@@ -67,6 +76,9 @@ export function useRewardedAd() {
         }
       } else {
         // Ad not ready yet — don't block user action, execute immediately
+        try {
+          load();
+        } catch (_e) {}
         if (pendingCbRef.current) {
           const cb = pendingCbRef.current;
           pendingCbRef.current = null;
@@ -74,7 +86,7 @@ export function useRewardedAd() {
         }
       }
     },
-    [isLoaded, show],
+    [isLoaded, show, load],
   );
 
   return {showAd, adLoaded: isLoaded, error};
