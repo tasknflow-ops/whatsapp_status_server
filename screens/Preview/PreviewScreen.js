@@ -9,8 +9,10 @@ import {
   Dimensions,
 } from 'react-native';
 import Video from 'react-native-video';
+import {LinearGradient} from 'expo-linear-gradient';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useDownload} from '../../hooks/useDownload';
-import {colors, spacing, radius} from '../../utils/theme';
+import {colors, spacing, radius, shadow} from '../../utils/theme';
 import {MEDIA_TYPE} from '../../utils/constants';
 import {getCachedFileUri} from '../../native/storage';
 
@@ -24,7 +26,6 @@ const {width, height} = Dimensions.get('window');
  * React Native without SAF, so they are used as-is.
  */
 function isSafUri(uri = '') {
-  // SAF tree/document URIs come from com.android.externalstorage
   return uri.startsWith('content://com.android.externalstorage') ||
          uri.startsWith('content://com.android.providers.downloads');
 }
@@ -41,6 +42,7 @@ function isSafUri(uri = '') {
 export default function PreviewScreen({route, navigation}) {
   const {item} = route.params;
   const {save, savingUri} = useDownload();
+  const insets = useSafeAreaInsets();
   const isVideo = item.mediaType === MEDIA_TYPE.VIDEO;
   const saving = savingUri === item.uri;
 
@@ -118,7 +120,7 @@ export default function PreviewScreen({route, navigation}) {
 
       {/* ── Close button (top-right) ── */}
       <TouchableOpacity
-        style={styles.closeBtn}
+        style={[styles.closeBtn, {top: insets.top + spacing.md}]}
         onPress={() => navigation.goBack()}
         hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
         <Text style={styles.closeText}>✕</Text>
@@ -127,15 +129,24 @@ export default function PreviewScreen({route, navigation}) {
       {/* ── Save to gallery — hidden for already-saved items ── */}
       {!item.isGalleryUri && (
         <TouchableOpacity
-          style={styles.saveBtn}
           onPress={() => save(item)}
           disabled={saving}
-          activeOpacity={0.85}>
-          {saving ? (
-            <ActivityIndicator color={colors.white} />
-          ) : (
-            <Text style={styles.saveText}>⬇ Save to gallery</Text>
-          )}
+          activeOpacity={0.88}
+          style={[
+            styles.saveShadow,
+            {bottom: insets.bottom + spacing.xl},
+          ]}>
+          <LinearGradient
+            colors={[colors.accent, colors.accentDark]}
+            start={{x: 0, y: 0}}
+            end={{x: 1, y: 1}}
+            style={styles.saveBtn}>
+            {saving ? (
+              <ActivityIndicator color={colors.white} />
+            ) : (
+              <Text style={styles.saveText}>↓  Save to gallery</Text>
+            )}
+          </LinearGradient>
         </TouchableOpacity>
       )}
     </View>
@@ -152,31 +163,31 @@ const styles = StyleSheet.create({
   errorText: {color: colors.white, fontSize: 16},
   closeBtn: {
     position: 'absolute',
-    top: spacing.xl,
     right: spacing.lg,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255,255,255,0.14)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(255,255,255,0.28)',
   },
-  closeText: {color: colors.white, fontSize: 18, fontWeight: '700'},
-  saveBtn: {
+  closeText: {color: colors.white, fontSize: 17, fontWeight: '700'},
+  saveShadow: {
     position: 'absolute',
-    bottom: spacing.xl,
     alignSelf: 'center',
-    flexDirection: 'row',
-    backgroundColor: colors.accent,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
     borderRadius: radius.pill,
-    minWidth: 200,
+    ...shadow.floating,
+  },
+  saveBtn: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: 15,
+    borderRadius: radius.pill,
+    minWidth: 220,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
   },
-  saveText: {color: colors.white, fontWeight: '700', fontSize: 15},
+  saveText: {color: colors.white, fontWeight: '800', fontSize: 15, letterSpacing: 0.3},
 });

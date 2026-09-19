@@ -12,13 +12,17 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
+import {LinearGradient} from 'expo-linear-gradient';
 import EmptyState from '../../components/EmptyState';
-import {colors, spacing, radius} from '../../utils/theme';
+import GradientHeader from '../../components/GradientHeader';
+import CountChip from '../../components/CountChip';
+import {colors, spacing, radius, shadow} from '../../utils/theme';
 import {SAVED_FOLDER_NAME, MEDIA_TYPE} from '../../utils/constants';
 import {useRewardedAd} from '../../hooks/useRewardedAd';
 
-const GAP = spacing.sm;
-const size = (Dimensions.get('window').width - GAP * 3) / 2;
+const GAP = spacing.md;
+const OUTER = spacing.lg;
+const size = (Dimensions.get('window').width - OUTER * 2 - GAP) / 2;
 
 async function checkOrRequestGalleryPermission() {
   if (Platform.OS !== 'android') return true;
@@ -56,8 +60,6 @@ async function checkOrRequestGalleryPermission() {
 /**
  * Lists media already saved by this app in the SAVED_FOLDER_NAME album.
  * Refreshes each time the tab gains focus.
- *
- * Tapping any item displays a RewardedAd and opens fullscreen preview.
  */
 export default function SavedScreen({navigation}) {
   const [items, setItems] = useState([]);
@@ -88,7 +90,6 @@ export default function SavedScreen({navigation}) {
         });
       setItems(mapped);
     } catch (_e) {
-      // Album may not exist yet or permission denied — treat as empty gracefully.
       setItems([]);
     } finally {
       setLoaded(true);
@@ -103,7 +104,6 @@ export default function SavedScreen({navigation}) {
 
   const openPreview = useCallback(
     item => {
-      // Show rewarded ad, then open preview once reward is earned / ad closes
       showAd(() => {
         navigation.navigate('Preview', {item});
       });
@@ -111,9 +111,18 @@ export default function SavedScreen({navigation}) {
     [navigation, showAd],
   );
 
+  const header = (
+    <GradientHeader
+      title="Saved"
+      subtitle="Your collection, kept forever"
+      right={items.length > 0 ? <CountChip count={items.length} label="saved" /> : null}
+    />
+  );
+
   if (loaded && items.length === 0) {
     return (
       <View style={styles.container}>
+        {header}
         <EmptyState
           emoji="💾"
           title="Nothing saved yet"
@@ -126,28 +135,33 @@ export default function SavedScreen({navigation}) {
 
   return (
     <View style={styles.container}>
+      {header}
       <FlatList
         data={items}
         keyExtractor={(it, i) => (it?.uri || '') + i}
         numColumns={2}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
         renderItem={({item}) => {
           const isVideo = item.mediaType === MEDIA_TYPE.VIDEO;
           return (
             <TouchableOpacity
               style={styles.cell}
-              activeOpacity={0.85}
+              activeOpacity={0.9}
               onPress={() => openPreview(item)}>
-              <Image
-                source={{uri: item.uri}}
-                style={styles.thumb}
-                resizeMode="cover"
-              />
+              <Image source={{uri: item.uri}} style={styles.thumb} resizeMode="cover" />
               {isVideo && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>▶</Text>
-                </View>
+                <>
+                  <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.4)']}
+                    style={styles.scrim}
+                    pointerEvents="none"
+                  />
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>▶</Text>
+                  </View>
+                </>
               )}
             </TouchableOpacity>
           );
@@ -159,17 +173,23 @@ export default function SavedScreen({navigation}) {
 
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: colors.bg},
-  content: {padding: spacing.sm},
+  content: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
   row: {justifyContent: 'space-between'},
   cell: {
     width: size,
-    height: size,
+    height: size * 1.18,
     marginBottom: GAP,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     overflow: 'hidden',
-    backgroundColor: '#222',
+    backgroundColor: colors.thumbBg,
+    ...shadow.card,
   },
   thumb: {width: '100%', height: '100%'},
+  scrim: {position: 'absolute', left: 0, right: 0, bottom: 0, height: 70},
   badge: {
     position: 'absolute',
     top: 0,
@@ -181,9 +201,10 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: colors.white,
-    fontSize: 28,
-    textShadowColor: 'rgba(0,0,0,0.8)',
+    fontSize: 24,
+    marginLeft: 3,
+    textShadowColor: 'rgba(0,0,0,0.6)',
     textShadowOffset: {width: 0, height: 1},
-    textShadowRadius: 4,
+    textShadowRadius: 6,
   },
 });

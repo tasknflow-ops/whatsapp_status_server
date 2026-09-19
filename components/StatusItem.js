@@ -9,28 +9,26 @@ import {
   Dimensions,
 } from 'react-native';
 import Video from 'react-native-video';
-import {colors, spacing, radius} from '../utils/theme';
+import {LinearGradient} from 'expo-linear-gradient';
+import {colors, spacing, radius, shadow} from '../utils/theme';
 import {MEDIA_TYPE} from '../utils/constants';
 import {getCachedFileUri} from '../native/storage';
 
-const GAP = spacing.sm;
+const GAP = spacing.md;
 const COLS = 2;
-const size = (Dimensions.get('window').width - GAP * (COLS + 1)) / COLS;
+const OUTER = spacing.lg;
+const size = (Dimensions.get('window').width - OUTER * 2 - GAP) / COLS;
 
 /**
- * One status thumbnail card.
+ * One premium status thumbnail card.
  *
- * - Images: resolved to file:// via getCachedFileUri, rendered with <Image>.
- * - Videos: resolved to file:// via getCachedFileUri, rendered with a paused
- *   <Video> to show the first frame as a thumbnail.
- *
- * Tapping the thumbnail opens fullscreen preview (onPress).
- * Tapping "Save" downloads to gallery (onSave).
+ * - Rounded, elevated media tile with a soft shadow.
+ * - Videos show a paused first frame with a glassy play badge.
+ * - A frosted "Save" pill floats at the bottom of the tile.
  */
 export default function StatusItem({item, onPress, onSave, saving}) {
   const isVideo = item.mediaType === MEDIA_TYPE.VIDEO;
 
-  // Cached file:// URI for both images and videos
   const [fileUri, setFileUri] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -49,25 +47,23 @@ export default function StatusItem({item, onPress, onSave, saving}) {
 
   return (
     <View style={styles.cell}>
-      {/* ── Thumbnail ── */}
       <TouchableOpacity
-        activeOpacity={0.9}
+        activeOpacity={0.92}
         onPress={() => onPress(item)}
-        style={styles.thumbWrap}>
+        style={styles.tile}>
         {loading ? (
-          <View style={styles.loadingBox}>
-            <ActivityIndicator color={colors.accent} />
+          <View style={styles.placeholder}>
+            <ActivityIndicator color={colors.primary} />
           </View>
         ) : !fileUri ? (
-          <View style={styles.loadingBox}>
+          <View style={styles.placeholder}>
             <Text style={styles.errorIcon}>{isVideo ? '🎬' : '🖼️'}</Text>
           </View>
         ) : isVideo ? (
-          /* Paused video shows first frame as thumbnail */
-          <View style={styles.thumbWrap}>
+          <View style={styles.fill}>
             <Video
               source={{uri: fileUri}}
-              style={styles.thumb}
+              style={styles.fill}
               paused
               muted
               resizeMode="cover"
@@ -79,25 +75,30 @@ export default function StatusItem({item, onPress, onSave, saving}) {
             </View>
           </View>
         ) : (
-          <Image
-            source={{uri: fileUri}}
-            style={styles.thumb}
-            resizeMode="cover"
-          />
+          <Image source={{uri: fileUri}} style={styles.fill} resizeMode="cover" />
         )}
-      </TouchableOpacity>
 
-      {/* ── Save button ── */}
-      <TouchableOpacity
-        style={styles.saveBtn}
-        onPress={() => onSave(item)}
-        disabled={saving}
-        activeOpacity={0.85}>
-        {saving ? (
-          <ActivityIndicator size="small" color={colors.white} />
-        ) : (
-          <Text style={styles.saveText}>⬇ Save</Text>
-        )}
+        {/* Bottom scrim so the save pill always reads clearly */}
+        {!loading && fileUri ? (
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.55)']}
+            style={styles.scrim}
+            pointerEvents="none"
+          />
+        ) : null}
+
+        {/* Floating frosted Save pill */}
+        <TouchableOpacity
+          style={styles.saveBtn}
+          onPress={() => onSave(item)}
+          disabled={saving}
+          activeOpacity={0.85}>
+          {saving ? (
+            <ActivityIndicator size="small" color={colors.white} />
+          ) : (
+            <Text style={styles.saveText}>↓  Save</Text>
+          )}
+        </TouchableOpacity>
       </TouchableOpacity>
     </View>
   );
@@ -105,22 +106,30 @@ export default function StatusItem({item, onPress, onSave, saving}) {
 
 const styles = StyleSheet.create({
   cell: {width: size, marginBottom: GAP},
-  thumbWrap: {
+  tile: {
     width: size,
-    height: size,
-    borderRadius: radius.md,
+    height: size * 1.18,
+    borderRadius: radius.lg,
     overflow: 'hidden',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.thumbBg,
+    ...shadow.card,
   },
-  thumb: {width: '100%', height: '100%'},
-  loadingBox: {
-    width: size,
-    height: size,
+  fill: {width: '100%', height: '100%'},
+  placeholder: {
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.thumbBg,
   },
-  errorIcon: {fontSize: 28},
+  errorIcon: {fontSize: 30, opacity: 0.5},
+  scrim: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 90,
+  },
   playBadge: {
     position: 'absolute',
     top: 0,
@@ -131,20 +140,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   playIcon: {
-    fontSize: 28,
+    fontSize: 22,
     color: colors.white,
-    textShadowColor: 'rgba(0,0,0,0.8)',
+    marginLeft: 3,
+    textShadowColor: 'rgba(0,0,0,0.6)',
     textShadowOffset: {width: 0, height: 1},
-    textShadowRadius: 4,
+    textShadowRadius: 6,
   },
   saveBtn: {
-    marginTop: spacing.xs,
-    backgroundColor: colors.accent,
+    position: 'absolute',
+    left: spacing.sm,
+    right: spacing.sm,
+    bottom: spacing.sm,
+    backgroundColor: 'rgba(37, 211, 102, 0.94)',
     borderRadius: radius.pill,
-    paddingVertical: spacing.sm,
+    paddingVertical: 9,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 34,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
   },
-  saveText: {color: colors.white, fontWeight: '700', fontSize: 13},
+  saveText: {color: colors.white, fontWeight: '800', fontSize: 13, letterSpacing: 0.3},
 });

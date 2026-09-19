@@ -1,29 +1,22 @@
 import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {createBottomTabNavigator, BottomTabBar} from '@react-navigation/bottom-tabs';
 import ImagesScreen from '../screens/Images/ImagesScreen';
 import VideosScreen from '../screens/Videos/VideosScreen';
 import SavedScreen from '../screens/Saved/SavedScreen';
-import {colors} from '../utils/theme';
+import {colors, shadow} from '../utils/theme';
 import AdBanner from '../components/AdBanner';
 
 const Tab = createBottomTabNavigator();
 
-// Emoji icons keep us dependency-free (no vector-icons native setup needed).
+// Tab icon with a soft pill highlight behind the active tab.
 function tabIcon(emoji) {
   return ({focused}) => (
-    <Text style={{fontSize: 20, opacity: focused ? 1 : 0.5}}>{emoji}</Text>
+    <View style={[styles.iconPill, focused && styles.iconPillActive]}>
+      <Text style={[styles.iconEmoji, {opacity: focused ? 1 : 0.55}]}>{emoji}</Text>
+    </View>
   );
 }
-
-/**
- * Renders the three main tabs with a Banner ad sitting between the screen
- * content and the tab bar.
- *
- * We use `tabBar` prop to inject a custom tab bar that wraps the default
- * BottomTabBar with the AdBanner on top of it.
- */
-import {BottomTabBar} from '@react-navigation/bottom-tabs';
 
 function TabBarWithAd(props) {
   return (
@@ -39,12 +32,18 @@ export default function Tabs() {
     <Tab.Navigator
       tabBar={props => <TabBarWithAd {...props} />}
       screenOptions={{
-        headerStyle: {backgroundColor: colors.primary},
-        headerTintColor: colors.white,
-        headerTitleStyle: {fontWeight: '700'},
+        headerShown: false,
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: {backgroundColor: colors.surface, height: 58, paddingBottom: 6},
+        tabBarInactiveTintColor: colors.textFaint,
+        tabBarLabelStyle: {fontSize: 11, fontWeight: '700', marginTop: 2},
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          height: 66,
+          paddingBottom: 8,
+          paddingTop: 8,
+          borderTopWidth: 0,
+          ...shadow.soft,
+        },
       }}>
       <Tab.Screen
         name="Images"
@@ -66,7 +65,14 @@ export default function Tabs() {
 }
 
 const styles = StyleSheet.create({
-  tabBarWrapper: {
-    backgroundColor: colors.surface,
+  tabBarWrapper: {backgroundColor: colors.surface},
+  iconPill: {
+    width: 44,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  iconPillActive: {backgroundColor: colors.accentSoft},
+  iconEmoji: {fontSize: 19},
 });

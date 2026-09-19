@@ -1,6 +1,7 @@
 import React from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
-import {colors, spacing, radius, typography} from '../utils/theme';
+import {LinearGradient} from 'expo-linear-gradient';
+import {colors, spacing, radius, typography, shadow} from '../utils/theme';
 
 export default function EmptyState({
   emoji = '🕓',
@@ -10,12 +11,24 @@ export default function EmptyState({
 }) {
   return (
     <View style={styles.container}>
-      <Text style={styles.emoji}>{emoji}</Text>
+      <View style={styles.iconOuter}>
+        <View style={styles.iconInner}>
+          <Text style={styles.emoji}>{emoji}</Text>
+        </View>
+      </View>
+
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>
+
       {onRefresh ? (
-        <TouchableOpacity style={styles.button} onPress={onRefresh} activeOpacity={0.85}>
-          <Text style={styles.buttonText}>Refresh</Text>
+        <TouchableOpacity onPress={onRefresh} activeOpacity={0.88} style={styles.btnShadow}>
+          <LinearGradient
+            colors={colors.gradient}
+            start={{x: 0, y: 0}}
+            end={{x: 1, y: 1}}
+            style={styles.button}>
+            <Text style={styles.buttonText}>↻  Refresh</Text>
+          </LinearGradient>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -29,19 +42,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.xl,
   },
-  emoji: {fontSize: 48, marginBottom: spacing.md},
-  title: {...typography.subtitle, marginBottom: spacing.sm, textAlign: 'center'},
+  iconOuter: {
+    width: 128,
+    height: 128,
+    borderRadius: 64,
+    backgroundColor: colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xl,
+  },
+  iconInner: {
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadow.soft,
+  },
+  emoji: {fontSize: 42},
+  title: {...typography.title, marginBottom: spacing.sm, textAlign: 'center'},
   message: {
     ...typography.muted,
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: spacing.lg,
+    lineHeight: 21,
+    marginBottom: spacing.xl,
+    maxWidth: 300,
   },
+  btnShadow: {...shadow.floating, borderRadius: radius.pill},
   button: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: 14,
     borderRadius: radius.pill,
   },
-  buttonText: {color: colors.white, fontWeight: '700'},
+  buttonText: {color: colors.white, fontWeight: '800', fontSize: 15, letterSpacing: 0.3},
 });

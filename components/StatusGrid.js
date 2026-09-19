@@ -32,6 +32,7 @@ export default function StatusGrid({
       numColumns={2}
       columnWrapperStyle={styles.row}
       contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
       renderItem={({item}) => (
         <StatusItem
           item={item}
@@ -53,7 +54,13 @@ export default function StatusGrid({
 }
 
 const styles = StyleSheet.create({
-  content: {padding: spacing.sm, backgroundColor: colors.bg, flexGrow: 1},
+  content: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
+    backgroundColor: colors.bg,
+    flexGrow: 1,
+  },
   row: {justifyContent: 'space-between'},
   emptyWrap: {flex: 1, backgroundColor: colors.bg},
 });
