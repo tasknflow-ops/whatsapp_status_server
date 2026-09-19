@@ -1,5 +1,5 @@
 import {useCallback, useState} from 'react';
-import {Alert} from 'react-native';
+import {Alert, ToastAndroid, Platform} from 'react-native';
 import {saveToGallery} from '../native/storage';
 import {useRewardedAd} from './useRewardedAd';
 
@@ -27,6 +27,13 @@ export function useDownload() {
           try {
             const ok = await saveToGallery(file);
             if (ok) {
+              if (Platform.OS === 'android') {
+                ToastAndroid.showWithGravity(
+                  'Status saved to your gallery!',
+                  ToastAndroid.LONG,
+                  ToastAndroid.BOTTOM,
+                );
+              }
               Alert.alert('Saved', 'Status saved to your gallery.');
             } else {
               Alert.alert('Could not save', 'Something went wrong saving this file.');

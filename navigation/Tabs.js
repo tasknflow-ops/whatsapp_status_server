@@ -56,9 +56,9 @@ export default function Tabs() {
         options={{title: 'Videos', tabBarIcon: tabIcon('🎬')}}
       />
       <Tab.Screen
-        name="Saved"
+        name="Gallery"
         component={SavedScreen}
-        options={{title: 'Saved', tabBarIcon: tabIcon('💾')}}
+        options={{title: 'Gallery', tabBarIcon: tabIcon('📁')}}
       />
     </Tab.Navigator>
   );

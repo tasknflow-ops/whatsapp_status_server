@@ -96,7 +96,7 @@ export default function StatusItem({item, onPress, onSave, saving}) {
           {saving ? (
             <ActivityIndicator size="small" color={colors.white} />
           ) : (
-            <Text style={styles.saveText}>↓  Save</Text>
+            <Text style={styles.saveText}>Save</Text>
           )}
         </TouchableOpacity>
       </TouchableOpacity>

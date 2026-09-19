@@ -113,7 +113,7 @@ export default function SavedScreen({navigation}) {
 
   const header = (
     <GradientHeader
-      title="Saved"
+      title="Gallery"
       subtitle="Your collection, kept forever"
       right={items.length > 0 ? <CountChip count={items.length} label="saved" /> : null}
     />
@@ -124,8 +124,8 @@ export default function SavedScreen({navigation}) {
       <View style={styles.container}>
         {header}
         <EmptyState
-          emoji="💾"
-          title="Nothing saved yet"
+          emoji="📁"
+          title="Nothing in gallery yet"
           message="Statuses you save will appear here and stay after 24 hours."
           onRefresh={load}
         />

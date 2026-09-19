@@ -34,7 +34,7 @@ function isSafUri(uri = '') {
  * Fullscreen preview screen.
  *
  * Opened from both the Images/Videos tabs (SAF content:// URIs) and the
- * Saved tab (CameraRoll file:// or content://media/... URIs).
+ * Gallery tab (CameraRoll file:// or content://media/... URIs).
  *
  * - SAF URIs   → copied to local cache first (getCachedFileUri)
  * - Gallery URIs → used directly (no SAF conversion needed)
@@ -144,7 +144,7 @@ export default function PreviewScreen({route, navigation}) {
             {saving ? (
               <ActivityIndicator color={colors.white} />
             ) : (
-              <Text style={styles.saveText}>↓  Save to gallery</Text>
+              <Text style={styles.saveText}>Save to gallery</Text>
             )}
           </LinearGradient>
         </TouchableOpacity>

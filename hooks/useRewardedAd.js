@@ -26,15 +26,6 @@ export function useRewardedAd() {
     }
   }, [load]);
 
-  // When reward is earned, run the pending callback
-  useEffect(() => {
-    if (isEarnedReward && pendingCbRef.current) {
-      const cb = pendingCbRef.current;
-      pendingCbRef.current = null;
-      cb();
-    }
-  }, [isEarnedReward]);
-
   // If an error happens while a callback was pending, run it so user isn't stuck
   useEffect(() => {
     if (error && pendingCbRef.current) {
@@ -44,13 +35,19 @@ export function useRewardedAd() {
     }
   }, [error]);
 
-  // When ad closes, ensure callback ran (even if user skipped) and preload next ad
+  // When ad finishes & closes, run pending callback and preload next ad
   useEffect(() => {
     if (isClosed) {
       if (pendingCbRef.current) {
         const cb = pendingCbRef.current;
         pendingCbRef.current = null;
-        cb();
+        setTimeout(() => {
+          try {
+            cb();
+          } catch (e) {
+            console.log('Error in ad completion callback:', e);
+          }
+        }, 250);
       }
       try {
         load();
