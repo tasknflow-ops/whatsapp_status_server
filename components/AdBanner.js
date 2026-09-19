@@ -1,22 +1,33 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {View, StyleSheet} from 'react-native';
-import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
+import {BannerAd, BannerAdSize} from 'react-native-google-mobile-ads';
 import {BANNER_AD_UNIT_ID} from '../utils/ads';
 
 /**
  * Thin wrapper around Google Mobile Ads BannerAd.
  *
- * Place this just above the bottom tab bar. It renders a standard
- * BANNER (320×50) and collapses to nothing if the ad fails to load,
- * so it never shows an ugly empty box.
+ * Placed above the bottom tab bar. Renders standard BANNER (320x50)
+ * using the provided test ID: ca-app-pub-3940256099942544/6300978111.
  */
 export default function AdBanner() {
+  const [adLoaded, setAdLoaded] = useState(false);
+
   return (
     <View style={styles.container}>
       <BannerAd
         unitId={BANNER_AD_UNIT_ID}
         size={BannerAdSize.BANNER}
-        requestOptions={{requestNonPersonalizedAdsOnly: false}}
+        requestOptions={{
+          requestNonPersonalizedAdsOnly: false,
+        }}
+        onAdLoaded={() => {
+          console.log('Banner ad loaded successfully');
+          setAdLoaded(true);
+        }}
+        onAdFailedToLoad={error => {
+          console.log('Banner ad failed to load:', error);
+          setAdLoaded(false);
+        }}
       />
     </View>
   );

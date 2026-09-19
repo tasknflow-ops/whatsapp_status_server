@@ -3,6 +3,7 @@ import {View, ActivityIndicator, StyleSheet, StatusBar} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import mobileAds from 'react-native-google-mobile-ads';
 
 import AppNavigator from './navigation/AppNavigator';
 import PermissionGate from './components/PermissionGate';
@@ -15,9 +16,17 @@ export default function App() {
   const hydrated = useAppStore(s => s.hydrated);
   const {isGranted, checking, requestAccess} = useSafPermission();
 
-  // Load the persisted folder grant on boot.
+  // Load the persisted folder grant and initialize AdMob on boot.
   useEffect(() => {
     hydrate();
+    mobileAds()
+      .initialize()
+      .then(statuses => {
+        console.log('Google Mobile Ads initialized:', statuses);
+      })
+      .catch(err => {
+        console.warn('Google Mobile Ads init warning:', err);
+      });
   }, [hydrate]);
 
   const booting = !hydrated || checking;

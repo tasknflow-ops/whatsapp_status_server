@@ -1,88 +1,81 @@
 import {useEffect, useRef, useCallback} from 'react';
-import {RewardedAd, RewardedAdEventType, AdEventType} from 'react-native-google-mobile-ads';
+import {useRewardedAd as useAdMobRewardedAd} from 'react-native-google-mobile-ads';
 import {REWARDED_AD_UNIT_ID} from '../utils/ads';
 
 /**
- * Hook that pre-loads a RewardedAd and exposes a `showAd(onEarned)` callback.
+ * Hook that pre-loads a RewardedAd and exposes a `showAd(onComplete)` function.
  *
- * Usage:
- *   const {showAd, adLoaded} = useRewardedAd();
- *   // When user presses "Open":
- *   showAd(() => { /* do the real action *\/ });
- *
- * - If the ad is loaded, it plays the rewarded ad and calls `onEarned` after
- *   the user earns the reward (watches to completion or closes after the reward
- *   threshold, depending on your AdMob unit config).
- * - If the ad is NOT yet loaded, `onEarned` is called immediately so UX is
- *   never blocked.
- * - After the ad closes, a fresh ad is pre-loaded automatically.
+ * - If ad is ready: plays the ad and invokes `onComplete` when reward is earned or ad closes.
+ * - If ad is not ready: immediately invokes `onComplete` so UX is never blocked.
+ * - Automatically reloads the next ad once the current one is closed.
  */
 export function useRewardedAd() {
-  const adRef = useRef(null);
-  const loadedRef = useRef(false);
-  const pendingCbRef = useRef(null);
-
-  const load = useCallback(() => {
-    loadedRef.current = false;
-
-    const rewarded = RewardedAd.createForAdRequest(REWARDED_AD_UNIT_ID, {
+  const {isLoaded, isClosed, isEarnedReward, load, show, error} =
+    useAdMobRewardedAd(REWARDED_AD_UNIT_ID, {
       requestNonPersonalizedAdsOnly: false,
     });
 
-    const unsubEarned = rewarded.addAdEventListener(
-      RewardedAdEventType.EARNED_REWARD,
-      () => {
-        if (pendingCbRef.current) {
-          pendingCbRef.current();
-          pendingCbRef.current = null;
-        }
-      },
-    );
+  const pendingCbRef = useRef(null);
 
-    const unsubClosed = rewarded.addAdEventListener(
-      AdEventType.CLOSED,
-      () => {
-        // If user closed before earning (skipped), still allow action
-        if (pendingCbRef.current) {
-          pendingCbRef.current();
-          pendingCbRef.current = null;
-        }
-        unsubEarned();
-        unsubClosed();
-        // Pre-load the next ad
-        load();
-      },
-    );
-
-    const unsubLoaded = rewarded.addAdEventListener(AdEventType.LOADED, () => {
-      loadedRef.current = true;
-      unsubLoaded();
-    });
-
-    rewarded.load();
-    adRef.current = rewarded;
-  }, []);
-
+  // Pre-load on mount
   useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    try {
+      load();
+    } catch (e) {
+      console.log('Error loading rewarded ad:', e);
+    }
+  }, [load]);
+
+  // When reward is earned, run the pending callback
+  useEffect(() => {
+    if (isEarnedReward && pendingCbRef.current) {
+      const cb = pendingCbRef.current;
+      pendingCbRef.current = null;
+      cb();
+    }
+  }, [isEarnedReward]);
+
+  // When ad closes, ensure callback ran (even if user skipped) and preload next ad
+  useEffect(() => {
+    if (isClosed) {
+      if (pendingCbRef.current) {
+        const cb = pendingCbRef.current;
+        pendingCbRef.current = null;
+        cb();
+      }
+      try {
+        load();
+      } catch (e) {
+        console.log('Error reloading rewarded ad:', e);
+      }
+    }
+  }, [isClosed, load]);
 
   const showAd = useCallback(
-    (onEarned) => {
+    onEarned => {
       pendingCbRef.current = onEarned;
-      if (loadedRef.current && adRef.current) {
-        adRef.current.show();
+      if (isLoaded) {
+        try {
+          show();
+        } catch (err) {
+          console.log('Error showing rewarded ad:', err);
+          if (pendingCbRef.current) {
+            const cb = pendingCbRef.current;
+            pendingCbRef.current = null;
+            cb();
+          }
+        }
       } else {
-        // Ad not ready — don't block user, just run the action
+        // Ad not ready yet — don't block user action, execute immediately
         if (pendingCbRef.current) {
-          pendingCbRef.current();
+          const cb = pendingCbRef.current;
           pendingCbRef.current = null;
+          cb();
         }
       }
     },
-    [],
+    [isLoaded, show],
   );
 
-  return {showAd, adLoaded: loadedRef.current};
+  return {showAd, adLoaded: isLoaded, error};
 }

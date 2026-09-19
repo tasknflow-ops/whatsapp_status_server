@@ -7,6 +7,8 @@ import {
   Text,
   TouchableOpacity,
   Dimensions,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
@@ -18,16 +20,44 @@ import {useRewardedAd} from '../../hooks/useRewardedAd';
 const GAP = spacing.sm;
 const size = (Dimensions.get('window').width - GAP * 3) / 2;
 
+async function checkOrRequestGalleryPermission() {
+  if (Platform.OS !== 'android') return true;
+  try {
+    if (Platform.Version >= 33) {
+      const checkImages = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+      );
+      if (checkImages) return true;
+      const res = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+      ]);
+      return (
+        res[PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES] ===
+          PermissionsAndroid.RESULTS.GRANTED ||
+        res[PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO] ===
+          PermissionsAndroid.RESULTS.GRANTED
+      );
+    } else {
+      const checkStorage = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+      );
+      if (checkStorage) return true;
+      const res = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+      );
+      return res === PermissionsAndroid.RESULTS.GRANTED;
+    }
+  } catch (_e) {
+    return false;
+  }
+}
+
 /**
- * Lists media already saved by this app.
- * Reads the CameraRoll album named SAVED_FOLDER_NAME.
+ * Lists media already saved by this app in the SAVED_FOLDER_NAME album.
  * Refreshes each time the tab gains focus.
  *
- * Tapping any item shows a RewardedAd then opens fullscreen preview once
- * the reward is earned (or immediately if the ad hasn't loaded yet).
- *
- * CameraRoll URIs (content://media/... or file://) are readable directly by
- * <Image> and react-native-video without SAF, so PreviewScreen uses them as-is.
+ * Tapping any item displays a RewardedAd and opens fullscreen preview.
  */
 export default function SavedScreen({navigation}) {
   const [items, setItems] = useState([]);
@@ -36,28 +66,29 @@ export default function SavedScreen({navigation}) {
 
   const load = useCallback(async () => {
     try {
+      await checkOrRequestGalleryPermission();
       const res = await CameraRoll.getPhotos({
         first: 200,
         assetType: 'All',
-        groupTypes: 'Album',
         groupName: SAVED_FOLDER_NAME,
       });
-      const mapped = res.edges.map(e => {
-        const isVideo = e.node.type && e.node.type.startsWith('video');
-        // Derive a filename from the URI for display / cache keying
-        const uri = e.node.image.uri;
-        const name = uri.split('/').pop() || 'status_file';
-        return {
-          uri,
-          name,
-          mediaType: isVideo ? MEDIA_TYPE.VIDEO : MEDIA_TYPE.IMAGE,
-          // Flag so PreviewScreen knows this is a gallery URI, not SAF
-          isGalleryUri: true,
-        };
-      });
+      const edges = res?.edges || [];
+      const mapped = edges
+        .filter(e => e?.node?.image?.uri)
+        .map(e => {
+          const isVideo = e.node?.type && e.node.type.startsWith('video');
+          const uri = e.node.image.uri;
+          const name = uri.split('/').pop() || 'status_file';
+          return {
+            uri,
+            name,
+            mediaType: isVideo ? MEDIA_TYPE.VIDEO : MEDIA_TYPE.IMAGE,
+            isGalleryUri: true,
+          };
+        });
       setItems(mapped);
     } catch (_e) {
-      // Album may not exist yet (nothing saved) — treat as empty.
+      // Album may not exist yet or permission denied — treat as empty gracefully.
       setItems([]);
     } finally {
       setLoaded(true);
@@ -97,7 +128,7 @@ export default function SavedScreen({navigation}) {
     <View style={styles.container}>
       <FlatList
         data={items}
-        keyExtractor={(it, i) => it.uri + i}
+        keyExtractor={(it, i) => (it?.uri || '') + i}
         numColumns={2}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.content}
@@ -108,7 +139,6 @@ export default function SavedScreen({navigation}) {
               style={styles.cell}
               activeOpacity={0.85}
               onPress={() => openPreview(item)}>
-              {/* CameraRoll URIs are directly usable in <Image> */}
               <Image
                 source={{uri: item.uri}}
                 style={styles.thumb}
