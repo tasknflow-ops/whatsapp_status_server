@@ -17,7 +17,7 @@
     ],
     "android": {
       "package": "com.jeemil.statussaver",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#2ac566"
@@ -31,7 +31,13 @@
       ]
     },
     "plugins": [
-      "expo-dev-client"
+      "expo-dev-client",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-9290713243324092~2233174375"
+        }
+      ]
     ],
     "extra": {
       "eas": {

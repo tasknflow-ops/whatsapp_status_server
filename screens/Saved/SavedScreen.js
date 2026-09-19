@@ -13,6 +13,7 @@ import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import EmptyState from '../../components/EmptyState';
 import {colors, spacing, radius} from '../../utils/theme';
 import {SAVED_FOLDER_NAME, MEDIA_TYPE} from '../../utils/constants';
+import {useRewardedAd} from '../../hooks/useRewardedAd';
 
 const GAP = spacing.sm;
 const size = (Dimensions.get('window').width - GAP * 3) / 2;
@@ -21,7 +22,9 @@ const size = (Dimensions.get('window').width - GAP * 3) / 2;
  * Lists media already saved by this app.
  * Reads the CameraRoll album named SAVED_FOLDER_NAME.
  * Refreshes each time the tab gains focus.
- * Tapping any item opens fullscreen preview via the shared PreviewScreen.
+ *
+ * Tapping any item shows a RewardedAd then opens fullscreen preview once
+ * the reward is earned (or immediately if the ad hasn't loaded yet).
  *
  * CameraRoll URIs (content://media/... or file://) are readable directly by
  * <Image> and react-native-video without SAF, so PreviewScreen uses them as-is.
@@ -29,6 +32,7 @@ const size = (Dimensions.get('window').width - GAP * 3) / 2;
 export default function SavedScreen({navigation}) {
   const [items, setItems] = useState([]);
   const [loaded, setLoaded] = useState(false);
+  const {showAd} = useRewardedAd();
 
   const load = useCallback(async () => {
     try {
@@ -68,9 +72,12 @@ export default function SavedScreen({navigation}) {
 
   const openPreview = useCallback(
     item => {
-      navigation.navigate('Preview', {item});
+      // Show rewarded ad, then open preview once reward is earned / ad closes
+      showAd(() => {
+        navigation.navigate('Preview', {item});
+      });
     },
-    [navigation],
+    [navigation, showAd],
   );
 
   if (loaded && items.length === 0) {

@@ -1,10 +1,11 @@
 import React from 'react';
-import {Text} from 'react-native';
+import {View, Text, StyleSheet} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import ImagesScreen from '../screens/Images/ImagesScreen';
 import VideosScreen from '../screens/Videos/VideosScreen';
 import SavedScreen from '../screens/Saved/SavedScreen';
 import {colors} from '../utils/theme';
+import AdBanner from '../components/AdBanner';
 
 const Tab = createBottomTabNavigator();
 
@@ -15,9 +16,28 @@ function tabIcon(emoji) {
   );
 }
 
+/**
+ * Renders the three main tabs with a Banner ad sitting between the screen
+ * content and the tab bar.
+ *
+ * We use `tabBar` prop to inject a custom tab bar that wraps the default
+ * BottomTabBar with the AdBanner on top of it.
+ */
+import {BottomTabBar} from '@react-navigation/bottom-tabs';
+
+function TabBarWithAd(props) {
+  return (
+    <View style={styles.tabBarWrapper}>
+      <AdBanner />
+      <BottomTabBar {...props} />
+    </View>
+  );
+}
+
 export default function Tabs() {
   return (
     <Tab.Navigator
+      tabBar={props => <TabBarWithAd {...props} />}
       screenOptions={{
         headerStyle: {backgroundColor: colors.primary},
         headerTintColor: colors.white,
@@ -44,3 +64,9 @@ export default function Tabs() {
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBarWrapper: {
+    backgroundColor: colors.surface,
+  },
+});
