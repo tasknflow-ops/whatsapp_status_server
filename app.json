@@ -17,10 +17,10 @@
     ],
     "android": {
       "package": "com.jeemil.statussaver",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#2ac566"
       },
       "permissions": [
         "android.permission.READ_MEDIA_IMAGES",
