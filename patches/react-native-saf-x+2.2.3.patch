@@ -1,7 +1,31 @@
 diff --git a/node_modules/react-native-saf-x/android/src/main/java/com/reactnativesafx/utils/EfficientDocumentHelper.java b/node_modules/react-native-saf-x/android/src/main/java/com/reactnativesafx/utils/EfficientDocumentHelper.java
-index 7653b7d..e238074 100644
+index 7653b7d..f7ba053 100644
 --- a/node_modules/react-native-saf-x/android/src/main/java/com/reactnativesafx/utils/EfficientDocumentHelper.java
 +++ b/node_modules/react-native-saf-x/android/src/main/java/com/reactnativesafx/utils/EfficientDocumentHelper.java
+@@ -677,15 +677,15 @@ public class EfficientDocumentHelper {
+             throw new FileNotFoundExceptionFast("'" + unknownStr + "' does not exist");
+           }
+ 
+-          byte[] bytes;
+-          int bytesRead;
+-          int length;
+-
+           InputStream inputStream = context.getContentResolver().openInputStream(uri);
+-
+-          length = inputStream.available();
+-          bytes = new byte[length];
+-          bytesRead = inputStream.read(bytes);
++          java.io.ByteArrayOutputStream byteBuffer = new java.io.ByteArrayOutputStream();
++          byte[] buffer = new byte[16384];
++          int len;
++          while ((len = inputStream.read(buffer)) != -1) {
++            byteBuffer.write(buffer, 0, len);
++          }
++          byteBuffer.flush();
++          byte[] bytes = byteBuffer.toByteArray();
+           inputStream.close();
+ 
+           String inferredEncoding = encoding;
 @@ -849,6 +849,13 @@ public class EfficientDocumentHelper {
        Intent intent = new Intent();
        intent.setAction(Intent.ACTION_OPEN_DOCUMENT_TREE);

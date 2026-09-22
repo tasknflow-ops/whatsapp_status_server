@@ -10,7 +10,7 @@ export function normaliseEntry(entry) {
     size: entry.size ?? 0,
     lastModified: entry.lastModified ?? 0,
     mime: entry.mime ?? '',
-    mediaType: mediaTypeFromName(entry.name),
+    mediaType: mediaTypeFromName(entry.name, entry.mime),
     isDir: entry.type === 'directory',
   };
 }

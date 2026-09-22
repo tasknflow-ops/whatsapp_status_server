@@ -75,7 +75,12 @@ export default function StatusItem({item, onPress, onSave, saving}) {
             </View>
           </View>
         ) : (
-          <Image source={{uri: fileUri}} style={styles.fill} resizeMode="cover" />
+          <Image
+            source={{uri: fileUri}}
+            style={styles.fill}
+            resizeMode="cover"
+            onError={() => setFileUri(null)}
+          />
         )}
 
         {/* Bottom scrim so the save pill always reads clearly */}

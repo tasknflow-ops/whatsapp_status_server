@@ -71,7 +71,7 @@ export async function listFolder(uri) {
     );
     if (statusesDir?.uri) {
       const statusFiles = await SafX.listFiles(statusesDir.uri);
-      if (Array.isArray(statusFiles) && statusFiles.length > 0) {
+      if (Array.isArray(statusFiles)) {
         return statusFiles;
       }
     }
@@ -88,7 +88,7 @@ export async function listFolder(uri) {
         );
         if (subStatuses?.uri) {
           const statusFiles = await SafX.listFiles(subStatuses.uri);
-          if (Array.isArray(statusFiles) && statusFiles.length > 0) {
+          if (Array.isArray(statusFiles)) {
             return statusFiles;
           }
         }
@@ -113,7 +113,7 @@ export async function listFolder(uri) {
             );
             if (subStatuses?.uri) {
               const statusFiles = await SafX.listFiles(subStatuses.uri);
-              if (Array.isArray(statusFiles) && statusFiles.length > 0) {
+              if (Array.isArray(statusFiles)) {
                 return statusFiles;
               }
             }
@@ -148,25 +148,48 @@ export async function getCachedFileUri(contentUri, name) {
   }
 
   // 2. Use a stable cache filename so it survives between JS reloads
-  const safeName = name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const safeName = (name || 'status_file').replace(/[^a-zA-Z0-9._-]/g, '_');
   const cacheFile = `${FileSystem.cacheDirectory}saf_${safeName}`;
 
   try {
-    // 3. If already on disk, reuse it
+    // 3. If already on disk and not empty, reuse it
     const info = await FileSystem.getInfoAsync(cacheFile);
     if (info.exists) {
+      if (info.size > 0) {
+        _fileCache.set(contentUri, cacheFile);
+        return cacheFile;
+      }
+      try {
+        await FileSystem.deleteAsync(cacheFile, {idempotent: true});
+      } catch (_) {}
+    }
+
+    // 4. Try stream copy via FileSystem first (fastest, preserves all bytes)
+    try {
+      await FileSystem.copyAsync({
+        from: contentUri,
+        to: cacheFile,
+      });
+      const check = await FileSystem.getInfoAsync(cacheFile);
+      if (check.exists && check.size > 0) {
+        _fileCache.set(contentUri, cacheFile);
+        return cacheFile;
+      }
+    } catch (_copyErr) {
+      // fallback to SAF read below
+    }
+
+    // 5. Fallback: Read from SAF and write to local cache
+    const base64 = await SafX.readFile(contentUri, {encoding: 'base64'});
+    if (base64 && base64.length > 0) {
+      await FileSystem.writeAsStringAsync(cacheFile, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
       _fileCache.set(contentUri, cacheFile);
       return cacheFile;
     }
 
-    // 4. Read from SAF and write to local cache
-    const base64 = await SafX.readFile(contentUri, {encoding: 'base64'});
-    await FileSystem.writeAsStringAsync(cacheFile, base64, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-
-    _fileCache.set(contentUri, cacheFile);
-    return cacheFile;
+    return null;
   } catch (e) {
     console.warn('getCachedFileUri failed for', name, e);
     return null;

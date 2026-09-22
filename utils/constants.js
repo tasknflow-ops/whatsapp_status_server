@@ -16,8 +16,18 @@ export const STATUS_PATHS = [
   'WhatsApp/Media/.Statuses', // legacy (pre-Android 11)
 ];
 
-export const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'webp'];
-export const VIDEO_EXTS = ['mp4', 'mkv', '3gp', 'mov'];
+export const IMAGE_EXTS = [
+  'jpg',
+  'jpeg',
+  'png',
+  'webp',
+  'gif',
+  'bmp',
+  'heic',
+  'heif',
+  'dng',
+];
+export const VIDEO_EXTS = ['mp4', 'mkv', '3gp', 'mov', 'webm', 'ts', 'm4v'];
 
 // Folder inside public storage where we copy saved statuses.
 export const SAVED_FOLDER_NAME = 'StatusSaver';
@@ -36,7 +46,12 @@ export function extFromName(name = '') {
   return dot === -1 ? '' : name.slice(dot + 1).toLowerCase();
 }
 
-export function mediaTypeFromName(name = '') {
+export function mediaTypeFromName(name = '', mime = '') {
+  if (mime && typeof mime === 'string') {
+    const lowerMime = mime.toLowerCase();
+    if (lowerMime.startsWith('image/')) return MEDIA_TYPE.IMAGE;
+    if (lowerMime.startsWith('video/')) return MEDIA_TYPE.VIDEO;
+  }
   const ext = extFromName(name);
   if (IMAGE_EXTS.includes(ext)) return MEDIA_TYPE.IMAGE;
   if (VIDEO_EXTS.includes(ext)) return MEDIA_TYPE.VIDEO;

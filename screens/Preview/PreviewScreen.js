@@ -114,6 +114,7 @@ export default function PreviewScreen({route, navigation}) {
             source={{uri: playUri}}
             style={styles.image}
             resizeMode="contain"
+            onError={() => setError(true)}
           />
         )}
       </View>
