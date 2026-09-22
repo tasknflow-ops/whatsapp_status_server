@@ -49,7 +49,13 @@ export default function PermissionGate({onGrant, checking}) {
 
           <View style={styles.tipBox}>
             <Text style={styles.tipText}>
-              ⚡ <Text style={styles.bold}>Direct Access:</Text> The <Text style={styles.bold}>.Statuses</Text> folder will open automatically — you just need to tap <Text style={styles.bold}>“Use this folder”</Text>!
+              ⚡ <Text style={styles.bold}>Super Simple:</Text> Whether you see <Text style={styles.bold}>Media</Text> or <Text style={styles.bold}>.Statuses</Text>, simply tap <Text style={styles.bold}>“Use this folder”</Text>!
+            </Text>
+          </View>
+
+          <View style={styles.hiddenHelpBox}>
+            <Text style={styles.hiddenHelpText}>
+              💡 <Text style={styles.bold}>Don't see .Statuses?</Text> It's hidden by default on many phones. You can simply tap <Text style={styles.bold}>“Use this folder”</Text> on the visible <Text style={styles.bold}>Media</Text> folder — our app will automatically find your statuses inside!
             </Text>
           </View>
 
@@ -164,6 +170,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     color: colors.text,
+  },
+  hiddenHelpBox: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginTop: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+  hiddenHelpText: {
+    ...typography.muted,
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.textMuted,
   },
   trustRow: {flexDirection: 'row', marginTop: spacing.lg, gap: spacing.sm},
   trustChip: {

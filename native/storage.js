@@ -122,7 +122,15 @@ export async function listFolder(uri) {
       }
     }
 
-    // 4. Default: user selected .Statuses directly or folder with status files
+    // 4. If .Statuses was not in the directory listing (e.g. hidden on some devices), try direct subpath:
+    try {
+      const direct = await SafX.listFiles(`${uri}/.Statuses`);
+      if (Array.isArray(direct) && direct.length > 0) {
+        return direct;
+      }
+    } catch (_) {}
+
+    // 5. Default: user selected .Statuses directly or folder with status files
     return entries;
   } catch (e) {
     console.warn('listFiles failed', e);
