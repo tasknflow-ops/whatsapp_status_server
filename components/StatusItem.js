@@ -36,7 +36,7 @@ export default function StatusItem({item, onPress, onSave, saving}) {
     let cancelled = false;
     getCachedFileUri(item.uri, item.name).then(uri => {
       if (!cancelled) {
-        setFileUri(uri);
+        setFileUri(uri || (!isVideo ? item.uri : null));
         setLoading(false);
       }
     });

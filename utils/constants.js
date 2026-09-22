@@ -47,13 +47,25 @@ export function extFromName(name = '') {
 }
 
 export function mediaTypeFromName(name = '', mime = '') {
+  const cleanName = (name || '').toLowerCase().trim();
+  if (cleanName === '.nomedia' || cleanName.endsWith('.nomedia')) {
+    return MEDIA_TYPE.UNKNOWN;
+  }
+
   if (mime && typeof mime === 'string') {
     const lowerMime = mime.toLowerCase();
     if (lowerMime.startsWith('image/')) return MEDIA_TYPE.IMAGE;
     if (lowerMime.startsWith('video/')) return MEDIA_TYPE.VIDEO;
   }
-  const ext = extFromName(name);
-  if (IMAGE_EXTS.includes(ext)) return MEDIA_TYPE.IMAGE;
+
+  const ext = extFromName(cleanName);
   if (VIDEO_EXTS.includes(ext)) return MEDIA_TYPE.VIDEO;
+  if (IMAGE_EXTS.includes(ext)) return MEDIA_TYPE.IMAGE;
+
+  // In WhatsApp .Statuses, any non-video file that isn't .nomedia is an image
+  if (cleanName.length > 0 && cleanName !== '.nomedia') {
+    return MEDIA_TYPE.IMAGE;
+  }
+
   return MEDIA_TYPE.UNKNOWN;
 }

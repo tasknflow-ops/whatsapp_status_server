@@ -1,5 +1,6 @@
-import React from 'react';
+import React, {useCallback} from 'react';
 import {View, StyleSheet} from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 import StatusGrid from '../../components/StatusGrid';
 import GradientHeader from '../../components/GradientHeader';
 import CountChip from '../../components/CountChip';
@@ -14,6 +15,13 @@ import {colors} from '../../utils/theme';
 export default function StatusListScreen({navigation, kind}) {
   const {images, videos, loading, refresh} = useStatusFiles();
   const {save, savingUri} = useDownload();
+
+  // Auto-refresh when tab is focused / tapped
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
 
   const isVideos = kind === 'videos';
   const items = isVideos ? videos : images;

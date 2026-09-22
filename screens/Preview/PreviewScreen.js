@@ -62,6 +62,10 @@ export default function PreviewScreen({route, navigation}) {
         } else {
           // SAF URI — convert to file:// via local cache
           uri = await getCachedFileUri(item.uri, item.name);
+          if (!uri && !isVideo) {
+            // Fallback: React Native <Image> can display SAF content:// URIs directly
+            uri = item.uri;
+          }
         }
         if (!cancelled) {
           if (uri) {

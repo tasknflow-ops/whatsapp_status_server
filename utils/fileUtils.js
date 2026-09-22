@@ -33,7 +33,7 @@ export function dedupe(items) {
   const seen = new Set();
   const out = [];
   for (const it of items) {
-    const key = `${it.name}::${it.size}`;
+    const key = it.uri || `${it.name}::${it.size}`;
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(it);
