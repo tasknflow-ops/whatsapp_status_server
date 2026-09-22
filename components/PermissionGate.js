@@ -43,22 +43,13 @@ export default function PermissionGate({onGrant, checking}) {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>One-time Folder Setup</Text>
           <Text style={styles.cardBody}>
-            Tap <Text style={styles.bold}>Allow Access</Text> below, select the{' '}
-            <Text style={styles.bold}>Media</Text> folder (or <Text style={styles.bold}>.Statuses</Text>), and tap{' '}
-            <Text style={styles.bold}>“Use this folder”</Text>.
+            Tap <Text style={styles.bold}>Allow Access</Text> below, then simply tap{' '}
+            <Text style={styles.bold}>“Use this folder”</Text> and <Text style={styles.bold}>“Allow”</Text> at the bottom.
           </Text>
-
-          <View style={styles.pathHint}>
-            <Text style={styles.pathLabel}>QUICK FOLDER SELECTION</Text>
-            <Text style={styles.pathText}>
-              Android › media › com.whatsapp › WhatsApp ›{' '}
-              <Text style={styles.pathHighlight}>Media</Text>
-            </Text>
-          </View>
 
           <View style={styles.tipBox}>
             <Text style={styles.tipText}>
-              💡 <Text style={styles.bold}>Super easy:</Text> You can simply select the visible <Text style={styles.bold}>Media</Text> folder! The app will automatically find your statuses inside.
+              ⚡ <Text style={styles.bold}>Direct Access:</Text> The <Text style={styles.bold}>.Statuses</Text> folder will open automatically — you just need to tap <Text style={styles.bold}>“Use this folder”</Text>!
             </Text>
           </View>
 

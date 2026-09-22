@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native-saf-x/android/src/main/java/com/reactnativesafx/utils/EfficientDocumentHelper.java b/node_modules/react-native-saf-x/android/src/main/java/com/reactnativesafx/utils/EfficientDocumentHelper.java
-index 7653b7d..f7ba053 100644
+index 7653b7d..e90e22a 100644
 --- a/node_modules/react-native-saf-x/android/src/main/java/com/reactnativesafx/utils/EfficientDocumentHelper.java
 +++ b/node_modules/react-native-saf-x/android/src/main/java/com/reactnativesafx/utils/EfficientDocumentHelper.java
 @@ -677,15 +677,15 @@ public class EfficientDocumentHelper {
@@ -26,13 +26,23 @@ index 7653b7d..f7ba053 100644
            inputStream.close();
  
            String inferredEncoding = encoding;
-@@ -849,6 +849,13 @@ public class EfficientDocumentHelper {
+@@ -849,6 +849,23 @@ public class EfficientDocumentHelper {
        Intent intent = new Intent();
        intent.setAction(Intent.ACTION_OPEN_DOCUMENT_TREE);
  
 +      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 +        try {
-+          Uri initialUri = Uri.parse("content://com.android.externalstorage.documents/document/primary%3AAndroid%2Fmedia%2Fcom.whatsapp%2FWhatsApp%2FMedia");
++          String docId = "primary:Android/media/com.whatsapp/WhatsApp/Media/.Statuses";
++          try {
++            java.io.File root = android.os.Environment.getExternalStorageDirectory();
++            if (new java.io.File(root, "WhatsApp/Media/.Statuses").exists() && !new java.io.File(root, "Android/media/com.whatsapp/WhatsApp/Media/.Statuses").exists()) {
++              docId = "primary:WhatsApp/Media/.Statuses";
++            } else if (new java.io.File(root, "Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses").exists() && !new java.io.File(root, "Android/media/com.whatsapp/WhatsApp/Media/.Statuses").exists()) {
++              docId = "primary:Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses";
++            }
++          } catch (Exception ignored) {}
++
++          Uri initialUri = DocumentsContract.buildDocumentUri("com.android.externalstorage.documents", docId);
 +          intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, initialUri);
 +        } catch (Exception ignored) {}
 +      }
