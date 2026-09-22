@@ -41,27 +41,14 @@ export default function PermissionGate({onGrant, checking}) {
         ]}
         showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>One-time Folder Setup</Text>
+          <Text style={styles.cardTitle}>Permission Required</Text>
           <Text style={styles.cardBody}>
-            Tap <Text style={styles.bold}>Allow Access</Text> below, then simply tap{' '}
-            <Text style={styles.bold}>“Use this folder”</Text> and <Text style={styles.bold}>“Allow”</Text> at the bottom.
+            Please allow folder access to view and save WhatsApp photos & videos.
           </Text>
-
-          <View style={styles.tipBox}>
-            <Text style={styles.tipText}>
-              ⚡ <Text style={styles.bold}>Super Simple:</Text> Whether you see <Text style={styles.bold}>Media</Text> or <Text style={styles.bold}>.Statuses</Text>, simply tap <Text style={styles.bold}>“Use this folder”</Text>!
-            </Text>
-          </View>
-
-          <View style={styles.hiddenHelpBox}>
-            <Text style={styles.hiddenHelpText}>
-              💡 <Text style={styles.bold}>Don't see .Statuses?</Text> It's hidden by default on many phones. You can simply tap <Text style={styles.bold}>“Use this folder”</Text> on the visible <Text style={styles.bold}>Media</Text> folder — our app will automatically find your statuses inside!
-            </Text>
-          </View>
 
           <View style={styles.trustRow}>
             <View style={styles.trustChip}>
-              <Text style={styles.trustText}>🔒 Private</Text>
+              <Text style={styles.trustText}>🔒 100% Private</Text>
             </View>
             <View style={styles.trustChip}>
               <Text style={styles.trustText}>✨ One-time setup</Text>
@@ -80,7 +67,7 @@ export default function PermissionGate({onGrant, checking}) {
             end={{x: 1, y: 1}}
             style={styles.cta}>
             <Text style={styles.ctaText}>
-              {checking ? 'Checking…' : '🔓  Allow Access'}
+              {checking ? 'Checking…' : 'Allow Permission'}
             </Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -145,45 +132,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: colors.textMuted,
     marginBottom: spacing.lg,
-  },
-  bold: {fontWeight: '800', color: colors.text},
-  pathHint: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-  },
-  pathLabel: {...typography.label, fontSize: 10, marginBottom: 4},
-  pathText: {...typography.muted, lineHeight: 20},
-  pathHighlight: {color: colors.primary, fontWeight: '800'},
-  tipBox: {
-    backgroundColor: colors.accentSoft,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginTop: spacing.md,
-    borderWidth: 1,
-    borderColor: 'rgba(37, 211, 102, 0.25)',
-  },
-  tipText: {
-    ...typography.muted,
-    fontSize: 12,
-    lineHeight: 18,
-    color: colors.text,
-  },
-  hiddenHelpBox: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginTop: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-  },
-  hiddenHelpText: {
-    ...typography.muted,
-    fontSize: 12,
-    lineHeight: 18,
-    color: colors.textMuted,
   },
   trustRow: {flexDirection: 'row', marginTop: spacing.lg, gap: spacing.sm},
   trustChip: {
