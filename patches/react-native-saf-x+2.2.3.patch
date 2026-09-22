@@ -1,0 +1,18 @@
+diff --git a/node_modules/react-native-saf-x/android/src/main/java/com/reactnativesafx/utils/EfficientDocumentHelper.java b/node_modules/react-native-saf-x/android/src/main/java/com/reactnativesafx/utils/EfficientDocumentHelper.java
+index 7653b7d..e238074 100644
+--- a/node_modules/react-native-saf-x/android/src/main/java/com/reactnativesafx/utils/EfficientDocumentHelper.java
++++ b/node_modules/react-native-saf-x/android/src/main/java/com/reactnativesafx/utils/EfficientDocumentHelper.java
+@@ -849,6 +849,13 @@ public class EfficientDocumentHelper {
+       Intent intent = new Intent();
+       intent.setAction(Intent.ACTION_OPEN_DOCUMENT_TREE);
+ 
++      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
++        try {
++          Uri initialUri = Uri.parse("content://com.android.externalstorage.documents/document/primary%3AAndroid%2Fmedia%2Fcom.whatsapp%2FWhatsApp%2FMedia");
++          intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, initialUri);
++        } catch (Exception ignored) {}
++      }
++
+       if (activityEventListener != null) {
+         context.removeActivityEventListener(activityEventListener);
+         activityEventListener = null;

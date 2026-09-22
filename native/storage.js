@@ -52,12 +52,78 @@ export async function stillHasPermission(uri) {
 /**
  * List raw entries in the granted folder. Returns [] on any failure so the
  * UI can show an empty state rather than crashing.
+ *
+ * Smart resolution:
+ * - If user selected .Statuses directly -> returns files in .Statuses
+ * - If user selected Media folder -> automatically finds .Statuses inside Media and returns its files
+ * - If user selected WhatsApp folder -> finds Media -> .Statuses
+ * - If user selected com.whatsapp folder -> finds WhatsApp -> Media -> .Statuses
  */
 export async function listFolder(uri) {
   if (!uri) return [];
   try {
     const entries = await SafX.listFiles(uri);
-    return Array.isArray(entries) ? entries : [];
+    if (!Array.isArray(entries) || entries.length === 0) return [];
+
+    // 1. Check if the selected folder directly contains a .Statuses subfolder (e.g. user selected 'Media'):
+    const statusesDir = entries.find(
+      e => e.type === 'directory' && (e.name === '.Statuses' || e.name === 'Statuses'),
+    );
+    if (statusesDir?.uri) {
+      const statusFiles = await SafX.listFiles(statusesDir.uri);
+      if (Array.isArray(statusFiles) && statusFiles.length > 0) {
+        return statusFiles;
+      }
+    }
+
+    // 2. Check if user selected WhatsApp root containing 'Media':
+    const mediaDir = entries.find(
+      e => e.type === 'directory' && e.name === 'Media',
+    );
+    if (mediaDir?.uri) {
+      const mediaEntries = await SafX.listFiles(mediaDir.uri);
+      if (Array.isArray(mediaEntries)) {
+        const subStatuses = mediaEntries.find(
+          e => e.type === 'directory' && (e.name === '.Statuses' || e.name === 'Statuses'),
+        );
+        if (subStatuses?.uri) {
+          const statusFiles = await SafX.listFiles(subStatuses.uri);
+          if (Array.isArray(statusFiles) && statusFiles.length > 0) {
+            return statusFiles;
+          }
+        }
+      }
+    }
+
+    // 3. Check if user selected com.whatsapp containing 'WhatsApp':
+    const waDir = entries.find(
+      e => e.type === 'directory' && (e.name === 'WhatsApp' || e.name === 'WhatsApp Business'),
+    );
+    if (waDir?.uri) {
+      const waEntries = await SafX.listFiles(waDir.uri);
+      if (Array.isArray(waEntries)) {
+        const subMedia = waEntries.find(
+          e => e.type === 'directory' && e.name === 'Media',
+        );
+        if (subMedia?.uri) {
+          const mediaEntries = await SafX.listFiles(subMedia.uri);
+          if (Array.isArray(mediaEntries)) {
+            const subStatuses = mediaEntries.find(
+              e => e.type === 'directory' && (e.name === '.Statuses' || e.name === 'Statuses'),
+            );
+            if (subStatuses?.uri) {
+              const statusFiles = await SafX.listFiles(subStatuses.uri);
+              if (Array.isArray(statusFiles) && statusFiles.length > 0) {
+                return statusFiles;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // 4. Default: user selected .Statuses directly or folder with status files
+    return entries;
   } catch (e) {
     console.warn('listFiles failed', e);
     return [];
