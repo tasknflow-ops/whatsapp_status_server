@@ -35,6 +35,9 @@ export const SAVED_FOLDER_NAME = 'StatusSaver';
 // Key used to persist the granted SAF folder URI (via zustand + storage).
 export const PERSISTED_URI_KEY = 'saf_statuses_uri';
 
+// Key used to persist first-launch disclaimer consent.
+export const HAS_ACCEPTED_DISCLAIMER_KEY = '@statusly_has_accepted_disclaimer';
+
 export const MEDIA_TYPE = {
   IMAGE: 'image',
   VIDEO: 'video',

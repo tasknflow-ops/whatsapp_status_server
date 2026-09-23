@@ -11,6 +11,13 @@ export const colors = {
   accentDark: '#1DA851',
   accentSoft: '#DFF6E7', // pale green wash for chips / subtle fills
 
+  // Statusly Teal / Cyan Brand
+  teal: '#008BA4',
+  tealLight: '#00C4CC',
+  tealDark: '#006E82',
+  tealSoft: '#E6F8F9',
+  tealGradient: ['#00C4CC', '#008BA4', '#006E82'],
+
   // Neutrals / surfaces
   bg: '#F4F2EE', // soft warm off-white background
   bgAlt: '#ECE7E1',

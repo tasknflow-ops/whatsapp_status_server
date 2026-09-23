@@ -7,6 +7,7 @@ import mobileAds from 'react-native-google-mobile-ads';
 
 import AppNavigator from './navigation/AppNavigator';
 import PermissionGate from './components/PermissionGate';
+import FirstLaunchDisclaimerModal from './components/FirstLaunchDisclaimerModal';
 import {useSafPermission} from './hooks/useSafPermission';
 import {useAppStore} from './store/useAppStore';
 import {colors} from './utils/theme';
@@ -14,6 +15,8 @@ import {colors} from './utils/theme';
 export default function App() {
   const hydrate = useAppStore(s => s.hydrate);
   const hydrated = useAppStore(s => s.hydrated);
+  const hasAcceptedDisclaimer = useAppStore(s => s.hasAcceptedDisclaimer);
+  const setHasAcceptedDisclaimer = useAppStore(s => s.setHasAcceptedDisclaimer);
   const {isGranted, checking, requestAccess} = useSafPermission();
 
   // Load the persisted folder grant and initialize AdMob on boot.
@@ -46,6 +49,10 @@ export default function App() {
         ) : (
           <PermissionGate onGrant={requestAccess} checking={checking} />
         )}
+        <FirstLaunchDisclaimerModal
+          visible={!booting && !hasAcceptedDisclaimer}
+          onAccept={() => setHasAcceptedDisclaimer(true)}
+        />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

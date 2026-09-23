@@ -1,12 +1,27 @@
 import {create} from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {PERSISTED_URI_KEY} from '../utils/constants';
+import {PERSISTED_URI_KEY, HAS_ACCEPTED_DISCLAIMER_KEY} from '../utils/constants';
 
 // Small global store. The one thing we MUST persist across launches is the
 // SAF folder URI the user granted for the .Statuses folder — re-asking every
 // launch would be terrible UX. Saved-file listings are in-memory only.
 
 export const useAppStore = create((set, get) => ({
+  // ---- First Launch Disclaimer Acceptance ----
+  hasAcceptedDisclaimer: false,
+  setHasAcceptedDisclaimer: async accepted => {
+    set({hasAcceptedDisclaimer: !!accepted});
+    try {
+      if (accepted) {
+        await AsyncStorage.setItem(HAS_ACCEPTED_DISCLAIMER_KEY, 'true');
+      } else {
+        await AsyncStorage.removeItem(HAS_ACCEPTED_DISCLAIMER_KEY);
+      }
+    } catch (e) {
+      console.warn('Failed to persist disclaimer acceptance', e);
+    }
+  },
+
   // ---- SAF grant ----
   statusesUri: null, // persisted content:// URI for the .Statuses folder
   hydrated: false, // becomes true once we've read AsyncStorage on boot
@@ -24,10 +39,17 @@ export const useAppStore = create((set, get) => ({
 
   hydrate: async () => {
     try {
-      const uri = await AsyncStorage.getItem(PERSISTED_URI_KEY);
-      set({statusesUri: uri || null, hydrated: true});
+      const [uri, disclaimerAccepted] = await Promise.all([
+        AsyncStorage.getItem(PERSISTED_URI_KEY),
+        AsyncStorage.getItem(HAS_ACCEPTED_DISCLAIMER_KEY),
+      ]);
+      set({
+        statusesUri: uri || null,
+        hasAcceptedDisclaimer: disclaimerAccepted === 'true',
+        hydrated: true,
+      });
     } catch (e) {
-      console.warn('Failed to hydrate SAF URI', e);
+      console.warn('Failed to hydrate store', e);
       set({hydrated: true});
     }
   },
