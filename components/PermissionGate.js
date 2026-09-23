@@ -28,7 +28,7 @@ export default function PermissionGate({onGrant, checking}) {
         <View style={styles.iconCircle}>
           <Text style={styles.iconText}>📲</Text>
         </View>
-        <Text style={styles.heroTitle}>Status Saver</Text>
+        <Text style={styles.heroTitle}>Statusly</Text>
         <Text style={styles.heroSub}>
           Save photos & videos from WhatsApp statuses — beautifully, privately.
         </Text>
