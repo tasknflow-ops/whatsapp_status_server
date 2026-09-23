@@ -38,6 +38,9 @@ export const PERSISTED_URI_KEY = 'saf_statuses_uri';
 // Key used to persist first-launch disclaimer consent.
 export const HAS_ACCEPTED_DISCLAIMER_KEY = '@statusly_has_accepted_disclaimer';
 
+// Key used to persist onboarding completion state.
+export const HAS_SEEN_ONBOARDING_KEY = '@statusly_has_seen_onboarding';
+
 export const MEDIA_TYPE = {
   IMAGE: 'image',
   VIDEO: 'video',

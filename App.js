@@ -8,18 +8,28 @@ import mobileAds from 'react-native-google-mobile-ads';
 import AppNavigator from './navigation/AppNavigator';
 import PermissionGate from './components/PermissionGate';
 import FirstLaunchDisclaimerModal from './components/FirstLaunchDisclaimerModal';
+import OnboardingScreen from './screens/Onboarding/OnboardingScreen';
 import {useSafPermission} from './hooks/useSafPermission';
 import {useAppStore} from './store/useAppStore';
 import {colors} from './utils/theme';
 
+/**
+ * Root component that orchestrates the full first-run flow:
+ *
+ *   Boot → Disclaimer → Onboarding → Permission/Home
+ *
+ * Each step is persisted via AsyncStorage so it only ever shows once.
+ */
 export default function App() {
   const hydrate = useAppStore(s => s.hydrate);
   const hydrated = useAppStore(s => s.hydrated);
   const hasAcceptedDisclaimer = useAppStore(s => s.hasAcceptedDisclaimer);
   const setHasAcceptedDisclaimer = useAppStore(s => s.setHasAcceptedDisclaimer);
+  const hasSeenOnboarding = useAppStore(s => s.hasSeenOnboarding);
+  const setHasSeenOnboarding = useAppStore(s => s.setHasSeenOnboarding);
   const {isGranted, checking, requestAccess} = useSafPermission();
 
-  // Load the persisted folder grant and initialize AdMob on boot.
+  // Load all persisted state and initialize AdMob on boot.
   useEffect(() => {
     hydrate();
     mobileAds()
@@ -37,18 +47,35 @@ export default function App() {
   return (
     <GestureHandlerRootView style={styles.flex}>
       <SafeAreaProvider>
-        <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
+        <StatusBar barStyle="light-content" backgroundColor={colors.tealDark} />
+
+        {/* ── 1. Loading splash ── */}
         {booting ? (
           <View style={styles.center}>
-            <ActivityIndicator size="large" color={colors.primary} />
+            <ActivityIndicator size="large" color={colors.teal} />
           </View>
-        ) : isGranted ? (
-          <NavigationContainer>
-            <AppNavigator />
-          </NavigationContainer>
+
+        /* ── 2. Onboarding (shown after disclaimer, before permission) ── */
+        ) : hasAcceptedDisclaimer && !hasSeenOnboarding ? (
+          <OnboardingScreen onFinish={() => setHasSeenOnboarding(true)} />
+
+        /* ── 3. Main app or permission gate ── */
+        ) : hasAcceptedDisclaimer && hasSeenOnboarding ? (
+          isGranted ? (
+            <NavigationContainer>
+              <AppNavigator />
+            </NavigationContainer>
+          ) : (
+            <PermissionGate onGrant={requestAccess} checking={checking} />
+          )
         ) : (
-          <PermissionGate onGrant={requestAccess} checking={checking} />
+          /* Waiting for disclaimer — render PermissionGate behind the modal */
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color={colors.teal} />
+          </View>
         )}
+
+        {/* ── Disclaimer modal — floats above everything until accepted ── */}
         <FirstLaunchDisclaimerModal
           visible={!booting && !hasAcceptedDisclaimer}
           onAccept={() => setHasAcceptedDisclaimer(true)}
@@ -60,5 +87,10 @@ export default function App() {
 
 const styles = StyleSheet.create({
   flex: {flex: 1},
-  center: {flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg},
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F4FBFC',
+  },
 });
