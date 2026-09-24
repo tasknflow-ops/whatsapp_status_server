@@ -16,7 +16,7 @@
       "**/*"
     ],
     "android": {
-      "package": "com.jeemil.statussaver",
+      "package": "com.jeemil.statusly",
       "versionCode": 15,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
