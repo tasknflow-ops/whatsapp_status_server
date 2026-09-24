@@ -17,7 +17,7 @@
     ],
     "android": {
       "package": "com.jimil.statusly",
-      "versionCode": 16,
+      "versionCode": 17,
       "targetSdkVersion": 36,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
